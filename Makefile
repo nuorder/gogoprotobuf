@@ -28,11 +28,17 @@
 
 GO_VERSION:=$(shell go version)
 
+# Skip known issues from purego tests
+# https://github.com/gogo/protobuf/issues/447
+# https://github.com/gogo/protobuf/issues/448
+# https://github.com/gogo/protobuf/issues/449
+SKIPISSUE:="/jsonpb|/test/casttype/|/test/oneof/combos/|/test/unmarshalmerge"
+
 .PHONY: nuke regenerate tests clean install gofmt vet contributors
 
 all: clean install regenerate install tests errcheck vet
 
-buildserverall: clean install regenerate install tests vet js
+buildserverall: clean install regenerate install tests vet js purego
 
 install:
 	go install ./proto
@@ -58,13 +64,12 @@ gofmt:
 	gofmt -l -s -w .
 
 regenerate:
-	make -C protoc-gen-gogo/descriptor regenerate
-	make -C protoc-gen-gogo/plugin regenerate
-	make -C protoc-gen-gogo/testdata regenerate
+	make -C protoc-gen-gogo regenerate
 	make -C gogoproto regenerate
-	make -C proto/testdata regenerate
+	make -C proto/test_proto regenerate
+	make -C proto/proto3_proto regenerate
 	make -C jsonpb/jsonpb_test_proto regenerate
-	make -C _conformance regenerate
+	make -C conformance regenerate
 	make -C protobuf regenerate
 	make -C test regenerate
 	make -C test/example regenerate
@@ -119,6 +124,10 @@ regenerate:
 	make -C test/issue322 regenerate
 	make -C test/issue330 regenerate
 	make -C test/importcustom-issue389 regenerate
+	make -C test/merge regenerate
+	make -C test/cachedsize regenerate
+	make -C test/deterministic regenerate
+	make -C test/issue438 regenerate
 	make gofmt
 
 tests:
@@ -140,9 +149,11 @@ drone:
 
 testall:
 	go get -u github.com/golang/protobuf/proto
-	make -C protoc-gen-gogo/testdata test
+	make -C protoc-gen-gogo test
 	make -C vanity/test test
 	make -C test/registration test
+	make -C conformance test
+	make -C test/issue427 test
 	make tests
 
 bench:
@@ -158,6 +169,9 @@ ifeq (go1.10, $(findstring go1.10, $(GO_VERSION)))
 	go get -u github.com/gopherjs/gopherjs
 	gopherjs build github.com/gogo/protobuf/protoc-gen-gogo
 endif
+
+purego:
+	go test -tags purego $$(go list ./... | grep -Ev $(SKIPISSUE))
 
 update:
 	(cd protobuf && make update)
