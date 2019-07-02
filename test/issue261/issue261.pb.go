@@ -12,6 +12,7 @@ import (
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
 	time "time"
@@ -194,9 +195,9 @@ func (m *MapStdTypes) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintIssue261(dAtA, i, uint64(github_com_gogo_protobuf_types.SizeOfStdDuration(*v)))
-				n1, err := github_com_gogo_protobuf_types.StdDurationMarshalTo(*v, dAtA[i:])
-				if err != nil {
-					return 0, err
+				n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(*v, dAtA[i:])
+				if err1 != nil {
+					return 0, err1
 				}
 				i += n1
 			}
@@ -237,14 +238,7 @@ func (m *MapStdTypes) Size() (n int) {
 }
 
 func sovIssue261(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozIssue261(x uint64) (n int) {
 	return sovIssue261(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -292,7 +286,7 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -320,7 +314,7 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -329,6 +323,9 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthIssue261
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthIssue261
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -349,7 +346,7 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -365,7 +362,7 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -381,7 +378,7 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -390,7 +387,7 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthIssue261
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthIssue261
 					}
 					if postmsgIndex > l {
@@ -424,6 +421,9 @@ func (m *MapStdTypes) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthIssue261
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthIssue261
 			}
 			if (iNdEx + skippy) > l {
@@ -492,8 +492,11 @@ func skipIssue261(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthIssue261
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthIssue261
 			}
 			return iNdEx, nil
@@ -524,6 +527,9 @@ func skipIssue261(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthIssue261
+				}
 			}
 			return iNdEx, nil
 		case 4:

@@ -9,6 +9,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
 )
@@ -188,14 +189,7 @@ func (m *A) Size() (n int) {
 }
 
 func sovVanity(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozVanity(x uint64) (n int) {
 	return sovVanity(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -235,7 +229,7 @@ func (m *A) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -263,7 +257,7 @@ func (m *A) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -273,6 +267,9 @@ func (m *A) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthVanity
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVanity
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -292,7 +289,7 @@ func (m *A) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Int |= (int64(b) & 0x7F) << shift
+				m.Int |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -305,6 +302,9 @@ func (m *A) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthVanity
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthVanity
 			}
 			if (iNdEx + skippy) > l {
@@ -376,8 +376,11 @@ func skipVanity(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthVanity
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthVanity
 			}
 			return iNdEx, nil
@@ -408,6 +411,9 @@ func skipVanity(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthVanity
+				}
 			}
 			return iNdEx, nil
 		case 4:

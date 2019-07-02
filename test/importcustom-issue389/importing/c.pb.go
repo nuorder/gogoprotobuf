@@ -12,6 +12,7 @@ import (
 	github_com_gogo_protobuf_test_importcustom_issue389_imported "github.com/gogo/protobuf/test/importcustom-issue389/imported"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -137,9 +138,9 @@ func (m *C) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintC(dAtA, i, uint64(m.F2.Size()))
-		n1, err := m.F2.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
+		n1, err1 := m.F2.MarshalTo(dAtA[i:])
+		if err1 != nil {
+			return 0, err1
 		}
 		i += n1
 	}
@@ -258,14 +259,7 @@ func (m *C) Size() (n int) {
 }
 
 func sovC(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozC(x uint64) (n int) {
 	return sovC(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -285,7 +279,7 @@ func (m *C) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -313,7 +307,7 @@ func (m *C) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -322,6 +316,9 @@ func (m *C) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthC
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthC
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -339,6 +336,9 @@ func (m *C) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthC
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthC
 			}
 			if (iNdEx + skippy) > l {
@@ -408,8 +408,11 @@ func skipC(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthC
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthC
 			}
 			return iNdEx, nil
@@ -440,6 +443,9 @@ func skipC(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthC
+				}
 			}
 			return iNdEx, nil
 		case 4:

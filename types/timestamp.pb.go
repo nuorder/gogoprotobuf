@@ -9,6 +9,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
 )
@@ -348,14 +349,7 @@ func (m *Timestamp) Size() (n int) {
 }
 
 func sovTimestamp(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTimestamp(x uint64) (n int) {
 	return sovTimestamp(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -375,7 +369,7 @@ func (m *Timestamp) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -403,7 +397,7 @@ func (m *Timestamp) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Seconds |= (int64(b) & 0x7F) << shift
+				m.Seconds |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -422,7 +416,7 @@ func (m *Timestamp) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Nanos |= (int32(b) & 0x7F) << shift
+				m.Nanos |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -434,6 +428,9 @@ func (m *Timestamp) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTimestamp
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTimestamp
 			}
 			if (iNdEx + skippy) > l {
@@ -503,8 +500,11 @@ func skipTimestamp(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthTimestamp
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthTimestamp
 			}
 			return iNdEx, nil
@@ -535,6 +535,9 @@ func skipTimestamp(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthTimestamp
+				}
 			}
 			return iNdEx, nil
 		case 4:

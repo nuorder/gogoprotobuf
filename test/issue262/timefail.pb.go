@@ -11,6 +11,7 @@ import (
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
 	time "time"
@@ -160,9 +161,9 @@ func (m *TimeFail) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintTimefail(dAtA, i, uint64(github_com_gogo_protobuf_types.SizeOfStdTime(*m.TimeTest)))
-		n1, err := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.TimeTest, dAtA[i:])
-		if err != nil {
-			return 0, err
+		n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.TimeTest, dAtA[i:])
+		if err1 != nil {
+			return 0, err1
 		}
 		i += n1
 	}
@@ -192,14 +193,7 @@ func (m *TimeFail) Size() (n int) {
 }
 
 func sovTimefail(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTimefail(x uint64) (n int) {
 	return sovTimefail(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -237,7 +231,7 @@ func (m *TimeFail) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -265,7 +259,7 @@ func (m *TimeFail) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -274,6 +268,9 @@ func (m *TimeFail) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTimefail
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTimefail
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -291,6 +288,9 @@ func (m *TimeFail) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTimefail
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTimefail
 			}
 			if (iNdEx + skippy) > l {
@@ -359,8 +359,11 @@ func skipTimefail(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthTimefail
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthTimefail
 			}
 			return iNdEx, nil
@@ -391,6 +394,9 @@ func skipTimefail(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthTimefail
+				}
 			}
 			return iNdEx, nil
 		case 4:

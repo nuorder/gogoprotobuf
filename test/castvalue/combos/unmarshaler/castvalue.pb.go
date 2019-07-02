@@ -15,6 +15,7 @@ import (
 	io "io"
 	io_ioutil "io/ioutil"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
 )
@@ -844,14 +845,7 @@ func (m *Wilson) Size() (n int) {
 }
 
 func sovCastvalue(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozCastvalue(x uint64) (n int) {
 	return sovCastvalue(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -922,7 +916,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -950,7 +944,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -959,6 +953,9 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCastvalue
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCastvalue
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -979,7 +976,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -995,7 +992,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1011,7 +1008,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1020,7 +1017,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCastvalue
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthCastvalue
 					}
 					if postmsgIndex > l {
@@ -1062,7 +1059,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1071,6 +1068,9 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthCastvalue
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCastvalue
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1091,7 +1091,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1107,7 +1107,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1123,7 +1123,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -1132,7 +1132,7 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthCastvalue
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthCastvalue
 					}
 					if postmsgIndex > l {
@@ -1169,6 +1169,9 @@ func (m *Castaway) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthCastvalue
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthCastvalue
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -1197,7 +1200,7 @@ func (m *Wilson) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -1225,7 +1228,7 @@ func (m *Wilson) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int64(b) & 0x7F) << shift
+				v |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1238,6 +1241,9 @@ func (m *Wilson) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthCastvalue
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthCastvalue
 			}
 			if (iNdEx + skippy) > l {
@@ -1307,8 +1313,11 @@ func skipCastvalue(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthCastvalue
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthCastvalue
 			}
 			return iNdEx, nil
@@ -1339,6 +1348,9 @@ func skipCastvalue(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthCastvalue
+				}
 			}
 			return iNdEx, nil
 		case 4:

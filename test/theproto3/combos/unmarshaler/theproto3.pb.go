@@ -18,6 +18,7 @@ import (
 	io "io"
 	io_ioutil "io/ioutil"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strconv "strconv"
 	strings "strings"
@@ -4728,14 +4729,7 @@ func (m *NotPacked) Size() (n int) {
 }
 
 func sovTheproto3(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTheproto3(x uint64) (n int) {
 	return sovTheproto3(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -4773,7 +4767,7 @@ func (this *Message) String() string {
 		`TrueScotsman:` + fmt.Sprintf("%v", this.TrueScotsman) + `,`,
 		`Score:` + fmt.Sprintf("%v", this.Score) + `,`,
 		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
-		`Nested:` + strings.Replace(fmt.Sprintf("%v", this.Nested), "Nested", "Nested", 1) + `,`,
+		`Nested:` + strings.Replace(this.Nested.String(), "Nested", "Nested", 1) + `,`,
 		`Terrain:` + mapStringForTerrain + `,`,
 		`Proto2Field:` + strings.Replace(fmt.Sprintf("%v", this.Proto2Field), "NinOptNative", "both.NinOptNative", 1) + `,`,
 		`Proto2Value:` + mapStringForProto2Value + `,`,
@@ -5318,7 +5312,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -5346,7 +5340,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5356,6 +5350,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5375,7 +5372,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Hilarity |= (Message_Humour(b) & 0x7F) << shift
+				m.Hilarity |= Message_Humour(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5394,7 +5391,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.HeightInCm |= (uint32(b) & 0x7F) << shift
+				m.HeightInCm |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5413,7 +5410,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5422,6 +5419,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5444,7 +5444,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ResultCount |= (int64(b) & 0x7F) << shift
+				m.ResultCount |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5463,7 +5463,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int(b) & 0x7F) << shift
+				v |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5492,7 +5492,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					v |= (uint64(b) & 0x7F) << shift
+					v |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5509,7 +5509,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
+					packedLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5518,12 +5518,15 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 					return ErrInvalidLengthTheproto3
 				}
 				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTheproto3
+				}
 				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
 				var elementCount int
 				var count int
-				for _, integer := range dAtA {
+				for _, integer := range dAtA[iNdEx:postIndex] {
 					if integer < 128 {
 						count++
 					}
@@ -5543,7 +5546,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						v |= (uint64(b) & 0x7F) << shift
+						v |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -5567,7 +5570,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5576,6 +5579,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5600,7 +5606,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5609,6 +5615,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5629,7 +5638,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5645,7 +5654,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int64(b) & 0x7F) << shift
+						mapkey |= int64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -5661,7 +5670,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -5670,7 +5679,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthTheproto3
 					}
 					if postmsgIndex > l {
@@ -5712,7 +5721,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5721,6 +5730,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5745,7 +5757,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5754,6 +5766,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5774,7 +5789,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5790,7 +5805,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int64(b) & 0x7F) << shift
+						mapkey |= int64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -5806,7 +5821,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -5815,7 +5830,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthTheproto3
 					}
 					if postmsgIndex > l {
@@ -5852,6 +5867,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthTheproto3
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5880,7 +5898,7 @@ func (m *Nested) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -5908,7 +5926,7 @@ func (m *Nested) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5918,6 +5936,9 @@ func (m *Nested) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -5930,6 +5951,9 @@ func (m *Nested) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTheproto3
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTheproto3
 			}
 			if (iNdEx + skippy) > l {
@@ -5960,7 +5984,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -5988,7 +6012,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5997,6 +6021,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6017,7 +6044,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6034,7 +6061,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6044,6 +6071,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -6088,7 +6118,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6097,6 +6127,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6117,7 +6150,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6134,7 +6167,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6144,6 +6177,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -6188,7 +6224,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6197,6 +6233,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6217,7 +6256,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6233,7 +6272,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6248,7 +6287,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (int32(b) & 0x7F) << shift
+						mapvalue |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6284,7 +6323,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6293,6 +6332,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6313,7 +6355,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6329,7 +6371,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int64(b) & 0x7F) << shift
+						mapkey |= int64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6344,7 +6386,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (int64(b) & 0x7F) << shift
+						mapvalue |= int64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6380,7 +6422,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6389,6 +6431,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6409,7 +6454,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6425,7 +6470,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (uint32(b) & 0x7F) << shift
+						mapkey |= uint32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6440,7 +6485,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (uint32(b) & 0x7F) << shift
+						mapvalue |= uint32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6476,7 +6521,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6485,6 +6530,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6505,7 +6553,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6521,7 +6569,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (uint64(b) & 0x7F) << shift
+						mapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6536,7 +6584,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (uint64(b) & 0x7F) << shift
+						mapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6572,7 +6620,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6581,6 +6629,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6601,7 +6652,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6618,7 +6669,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (int32(b) & 0x7F) << shift
+						mapkeytemp |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6636,7 +6687,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvaluetemp |= (int32(b) & 0x7F) << shift
+						mapvaluetemp |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6674,7 +6725,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6683,6 +6734,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6703,7 +6757,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6720,7 +6774,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (uint64(b) & 0x7F) << shift
+						mapkeytemp |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6738,7 +6792,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvaluetemp |= (uint64(b) & 0x7F) << shift
+						mapvaluetemp |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -6776,7 +6830,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6785,6 +6839,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6805,7 +6862,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6854,7 +6911,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6863,6 +6920,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6883,7 +6943,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6932,7 +6992,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6941,6 +7001,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -6961,7 +7024,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7010,7 +7073,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7019,6 +7082,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7039,7 +7105,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7088,7 +7154,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7097,6 +7163,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7117,7 +7186,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7134,7 +7203,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (int(b) & 0x7F) << shift
+						mapkeytemp |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7151,7 +7220,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvaluetemp |= (int(b) & 0x7F) << shift
+						mapvaluetemp |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7188,7 +7257,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7197,6 +7266,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7217,7 +7289,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7234,7 +7306,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7244,6 +7316,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7260,7 +7335,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7270,6 +7345,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7306,7 +7384,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7315,6 +7393,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7335,7 +7416,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7352,7 +7433,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7362,6 +7443,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7378,7 +7462,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapbyteLen |= (uint64(b) & 0x7F) << shift
+						mapbyteLen |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7388,6 +7472,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postbytesIndex := iNdEx + intMapbyteLen
+					if postbytesIndex < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postbytesIndex > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7425,7 +7512,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7434,6 +7521,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7454,7 +7544,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7471,7 +7561,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7481,6 +7571,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7496,7 +7589,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (MapEnum(b) & 0x7F) << shift
+						mapvalue |= MapEnum(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7532,7 +7625,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7541,6 +7634,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7561,7 +7657,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7578,7 +7674,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7588,6 +7684,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7604,7 +7703,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7613,7 +7712,7 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthTheproto3
 					}
 					if postmsgIndex > l {
@@ -7648,6 +7747,9 @@ func (m *AllMaps) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTheproto3
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTheproto3
 			}
 			if (iNdEx + skippy) > l {
@@ -7678,7 +7780,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -7706,7 +7808,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7715,6 +7817,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7735,7 +7840,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7752,7 +7857,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7762,6 +7867,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7806,7 +7914,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7815,6 +7923,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7835,7 +7946,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7852,7 +7963,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7862,6 +7973,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -7906,7 +8020,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7915,6 +8029,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -7935,7 +8052,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7951,7 +8068,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -7966,7 +8083,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (int32(b) & 0x7F) << shift
+						mapvalue |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8002,7 +8119,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8011,6 +8128,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8031,7 +8151,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8047,7 +8167,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int64(b) & 0x7F) << shift
+						mapkey |= int64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8062,7 +8182,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (int64(b) & 0x7F) << shift
+						mapvalue |= int64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8098,7 +8218,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8107,6 +8227,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8127,7 +8250,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8143,7 +8266,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (uint32(b) & 0x7F) << shift
+						mapkey |= uint32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8158,7 +8281,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (uint32(b) & 0x7F) << shift
+						mapvalue |= uint32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8194,7 +8317,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8203,6 +8326,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8223,7 +8349,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8239,7 +8365,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (uint64(b) & 0x7F) << shift
+						mapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8254,7 +8380,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (uint64(b) & 0x7F) << shift
+						mapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8290,7 +8416,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8299,6 +8425,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8319,7 +8448,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8336,7 +8465,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (int32(b) & 0x7F) << shift
+						mapkeytemp |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8354,7 +8483,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvaluetemp |= (int32(b) & 0x7F) << shift
+						mapvaluetemp |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8392,7 +8521,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8401,6 +8530,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8421,7 +8553,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8438,7 +8570,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (uint64(b) & 0x7F) << shift
+						mapkeytemp |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8456,7 +8588,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvaluetemp |= (uint64(b) & 0x7F) << shift
+						mapvaluetemp |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8494,7 +8626,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8503,6 +8635,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8523,7 +8658,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8572,7 +8707,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8581,6 +8716,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8601,7 +8739,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8650,7 +8788,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8659,6 +8797,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8679,7 +8820,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8728,7 +8869,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8737,6 +8878,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8757,7 +8901,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8806,7 +8950,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8815,6 +8959,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8835,7 +8982,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8852,7 +8999,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (int(b) & 0x7F) << shift
+						mapkeytemp |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8869,7 +9016,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvaluetemp |= (int(b) & 0x7F) << shift
+						mapvaluetemp |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8906,7 +9053,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -8915,6 +9062,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -8935,7 +9085,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8952,7 +9102,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8962,6 +9112,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -8978,7 +9131,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -8988,6 +9141,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9024,7 +9180,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9033,6 +9189,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9053,7 +9212,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9070,7 +9229,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9080,6 +9239,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9096,7 +9258,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapbyteLen |= (uint64(b) & 0x7F) << shift
+						mapbyteLen |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9106,6 +9268,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postbytesIndex := iNdEx + intMapbyteLen
+					if postbytesIndex < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postbytesIndex > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9143,7 +9308,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9152,6 +9317,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9172,7 +9340,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9189,7 +9357,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9199,6 +9367,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9214,7 +9385,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapvalue |= (MapEnum(b) & 0x7F) << shift
+						mapvalue |= MapEnum(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9250,7 +9421,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9259,6 +9430,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9279,7 +9453,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9296,7 +9470,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9306,6 +9480,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9322,7 +9499,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9331,7 +9508,7 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthTheproto3
 					}
 					if postmsgIndex > l {
@@ -9368,6 +9545,9 @@ func (m *AllMapsOrdered) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthTheproto3
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9396,7 +9576,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9424,7 +9604,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9433,6 +9613,9 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9453,7 +9636,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9469,7 +9652,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkey |= (int32(b) & 0x7F) << shift
+						mapkey |= int32(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9485,7 +9668,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						stringLenmapvalue |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9495,6 +9678,9 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapvalue > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9531,7 +9717,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9540,6 +9726,9 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9560,7 +9749,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9577,7 +9766,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (uint64(b) & 0x7F) << shift
+						mapkeytemp |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9595,7 +9784,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapmsglen |= (int(b) & 0x7F) << shift
+						mapmsglen |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9604,7 +9793,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postmsgIndex := iNdEx + mapmsglen
-					if mapmsglen < 0 {
+					if postmsgIndex < 0 {
 						return ErrInvalidLengthTheproto3
 					}
 					if postmsgIndex > l {
@@ -9646,7 +9835,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9655,6 +9844,9 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9675,7 +9867,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9692,7 +9884,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapkeytemp |= (int(b) & 0x7F) << shift
+						mapkeytemp |= int(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9709,7 +9901,7 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						mapbyteLen |= (uint64(b) & 0x7F) << shift
+						mapbyteLen |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -9719,6 +9911,9 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postbytesIndex := iNdEx + intMapbyteLen
+					if postbytesIndex < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postbytesIndex > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -9751,6 +9946,9 @@ func (m *MessageWithMap) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthTheproto3
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9779,7 +9977,7 @@ func (m *FloatingPoint) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9813,6 +10011,9 @@ func (m *FloatingPoint) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthTheproto3
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9841,7 +10042,7 @@ func (m *Uint128Pair) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9869,7 +10070,7 @@ func (m *Uint128Pair) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9878,6 +10079,9 @@ func (m *Uint128Pair) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9899,7 +10103,7 @@ func (m *Uint128Pair) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -9908,6 +10112,9 @@ func (m *Uint128Pair) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -9924,6 +10131,9 @@ func (m *Uint128Pair) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTheproto3
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTheproto3
 			}
 			if (iNdEx + skippy) > l {
@@ -9954,7 +10164,7 @@ func (m *ContainsNestedMap) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -9975,6 +10185,9 @@ func (m *ContainsNestedMap) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTheproto3
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTheproto3
 			}
 			if (iNdEx + skippy) > l {
@@ -10005,7 +10218,7 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -10033,7 +10246,7 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -10042,6 +10255,9 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthTheproto3
 			}
 			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10062,7 +10278,7 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
+					wire |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -10079,7 +10295,7 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						stringLenmapkey |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -10089,6 +10305,9 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 						return ErrInvalidLengthTheproto3
 					}
 					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthTheproto3
+					}
 					if postStringIndexmapkey > l {
 						return io.ErrUnexpectedEOF
 					}
@@ -10128,6 +10347,9 @@ func (m *ContainsNestedMap_NestedMap) Unmarshal(dAtA []byte) error {
 			if skippy < 0 {
 				return ErrInvalidLengthTheproto3
 			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTheproto3
+			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -10156,7 +10378,7 @@ func (m *NotPacked) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -10182,7 +10404,7 @@ func (m *NotPacked) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					v |= (uint64(b) & 0x7F) << shift
+					v |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -10199,7 +10421,7 @@ func (m *NotPacked) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
+					packedLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -10208,12 +10430,15 @@ func (m *NotPacked) Unmarshal(dAtA []byte) error {
 					return ErrInvalidLengthTheproto3
 				}
 				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTheproto3
+				}
 				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
 				var elementCount int
 				var count int
-				for _, integer := range dAtA {
+				for _, integer := range dAtA[iNdEx:postIndex] {
 					if integer < 128 {
 						count++
 					}
@@ -10233,7 +10458,7 @@ func (m *NotPacked) Unmarshal(dAtA []byte) error {
 						}
 						b := dAtA[iNdEx]
 						iNdEx++
-						v |= (uint64(b) & 0x7F) << shift
+						v |= uint64(b&0x7F) << shift
 						if b < 0x80 {
 							break
 						}
@@ -10250,6 +10475,9 @@ func (m *NotPacked) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthTheproto3
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthTheproto3
 			}
 			if (iNdEx + skippy) > l {
@@ -10319,8 +10547,11 @@ func skipTheproto3(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthTheproto3
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthTheproto3
 			}
 			return iNdEx, nil
@@ -10351,6 +10582,9 @@ func skipTheproto3(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthTheproto3
+				}
 			}
 			return iNdEx, nil
 		case 4:

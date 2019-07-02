@@ -10,6 +10,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 	reflect "reflect"
 	strings "strings"
 )
@@ -270,9 +271,9 @@ func (m *OneofTest) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Union != nil {
-		nn1, err := m.Union.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
+		nn1, err1 := m.Union.MarshalTo(dAtA[i:])
+		if err1 != nil {
+			return 0, err1
 		}
 		i += nn1
 	}
@@ -418,14 +419,7 @@ func (m *OneofTest_I) Size() (n int) {
 }
 
 func sovIssue322(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozIssue322(x uint64) (n int) {
 	return sovIssue322(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -445,7 +439,7 @@ func (m *OneofTest) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -473,7 +467,7 @@ func (m *OneofTest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int32(b) & 0x7F) << shift
+				v |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -486,6 +480,9 @@ func (m *OneofTest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthIssue322
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthIssue322
 			}
 			if (iNdEx + skippy) > l {
@@ -555,8 +552,11 @@ func skipIssue322(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthIssue322
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthIssue322
 			}
 			return iNdEx, nil
@@ -587,6 +587,9 @@ func skipIssue322(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthIssue322
+				}
 			}
 			return iNdEx, nil
 		case 4:

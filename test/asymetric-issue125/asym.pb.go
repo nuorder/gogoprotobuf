@@ -10,6 +10,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -387,14 +388,7 @@ func (m *M) Size() (n int) {
 }
 
 func sovAsym(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAsym(x uint64) (n int) {
 	return sovAsym(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -414,7 +408,7 @@ func (m *M) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -442,7 +436,7 @@ func (m *M) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -451,6 +445,9 @@ func (m *M) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthAsym
 			}
 			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAsym
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -467,6 +464,9 @@ func (m *M) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAsym
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAsym
 			}
 			if (iNdEx + skippy) > l {
@@ -497,7 +497,7 @@ func (m *MyType) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -518,6 +518,9 @@ func (m *MyType) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthAsym
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthAsym
 			}
 			if (iNdEx + skippy) > l {
@@ -587,8 +590,11 @@ func skipAsym(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthAsym
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthAsym
 			}
 			return iNdEx, nil
@@ -619,6 +625,9 @@ func skipAsym(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthAsym
+				}
 			}
 			return iNdEx, nil
 		case 4:

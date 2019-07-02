@@ -9,6 +9,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -176,14 +177,7 @@ func (m *B) Size() (n int) {
 }
 
 func sovGogovanity(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozGogovanity(x uint64) (n int) {
 	return sovGogovanity(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -203,7 +197,7 @@ func (m *B) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -231,7 +225,7 @@ func (m *B) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -241,6 +235,9 @@ func (m *B) Unmarshal(dAtA []byte) error {
 				return ErrInvalidLengthGogovanity
 			}
 			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGogovanity
+			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
@@ -261,7 +258,7 @@ func (m *B) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int64(b) & 0x7F) << shift
+				v |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -281,7 +278,7 @@ func (m *B) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (int32(b) & 0x7F) << shift
+				v |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -294,6 +291,9 @@ func (m *B) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthGogovanity
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthGogovanity
 			}
 			if (iNdEx + skippy) > l {
@@ -363,8 +363,11 @@ func skipGogovanity(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthGogovanity
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthGogovanity
 			}
 			return iNdEx, nil
@@ -395,6 +398,9 @@ func skipGogovanity(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthGogovanity
+				}
 			}
 			return iNdEx, nil
 		case 4:

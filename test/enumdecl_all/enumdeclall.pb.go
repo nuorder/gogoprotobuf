@@ -10,6 +10,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -357,14 +358,7 @@ func (m *Message) Size() (n int) {
 }
 
 func sovEnumdeclall(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozEnumdeclall(x uint64) (n int) {
 	return sovEnumdeclall(uint64((x << 1) ^ uint64((int64(x) >> 63))))
@@ -384,7 +378,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 			}
 			b := dAtA[iNdEx]
 			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
+			wire |= uint64(b&0x7F) << shift
 			if b < 0x80 {
 				break
 			}
@@ -412,7 +406,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EnumeratedField |= (MyEnum(b) & 0x7F) << shift
+				m.EnumeratedField |= MyEnum(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -431,7 +425,7 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OtherenumeratedField |= (MyOtherEnum(b) & 0x7F) << shift
+				m.OtherenumeratedField |= MyOtherEnum(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -443,6 +437,9 @@ func (m *Message) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			if skippy < 0 {
+				return ErrInvalidLengthEnumdeclall
+			}
+			if (iNdEx + skippy) < 0 {
 				return ErrInvalidLengthEnumdeclall
 			}
 			if (iNdEx + skippy) > l {
@@ -512,8 +509,11 @@ func skipEnumdeclall(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			iNdEx += length
 			if length < 0 {
+				return 0, ErrInvalidLengthEnumdeclall
+			}
+			iNdEx += length
+			if iNdEx < 0 {
 				return 0, ErrInvalidLengthEnumdeclall
 			}
 			return iNdEx, nil
@@ -544,6 +544,9 @@ func skipEnumdeclall(dAtA []byte) (n int, err error) {
 					return 0, err
 				}
 				iNdEx = start + next
+				if iNdEx < 0 {
+					return 0, ErrInvalidLengthEnumdeclall
+				}
 			}
 			return iNdEx, nil
 		case 4:
