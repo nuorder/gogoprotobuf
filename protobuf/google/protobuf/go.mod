@@ -1,3 +1,3 @@
-module github.com/gogo/protobuf/google/protobuf
+module github.com/gogo/protobuf/protobuf/google/protobuf
 
 go 1.13
